@@ -4,24 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personel Kayıt Sistemi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; }
         form { display: grid; gap: 15px; }
         label { font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
         button:hover { background: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #f8f9fa; }
         .delete-btn { background: #dc3545; }
+        .delete-btn:hover { background: #c82333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f8f9fa; }
+        .loading { opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>👤 Personel Kayıt Sistemi</h1>
+        <h1>👤 Personel Kayıt Sistemi (Bulut)</h1>
         
         <form id="personelForm">
             <div>
@@ -40,6 +43,7 @@
                     <option value="Muhasebe">Muhasebe</option>
                     <option value="İK">İK</option>
                     <option value="Satış">Satış</option>
+                    <option value="Pazarlama">Pazarlama</option>
                     <option value="Diğer">Diğer</option>
                 </select>
             </div>
@@ -71,6 +75,7 @@
                     <th>Departman</th>
                     <th>Telefon</th>
                     <th>E-posta</th>
+                    <th>Başlangıç Tarihi</th>
                     <th>İşlem</th>
                 </tr>
             </thead>
@@ -79,57 +84,92 @@
     </div>
 
     <script>
-        let personeller = JSON.parse(localStorage.getItem('personeller')) || [];
+        // === SUPABASE AYARLARINI BURAYA YAPIŞTIR ===
+        const SUPABASE_URL = 'https://BURAYA-PROJE-URL-IN.supabase.co';
+        const SUPABASE_ANON_KEY = 'BURAYA-ANON-PUBLIC-KEY-IN-YAPISTIR';
 
-        function renderTable() {
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadPersoneller() {
             const tbody = document.querySelector('#personelTable tbody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Yükleniyor...</td></tr>';
+
+            const { data, error } = await supabase
+                .from('personel')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="7" style="color:red;">Veritabanı hatası. Supabase ayarlarını kontrol edin.</td></tr>';
+                return;
+            }
+
             tbody.innerHTML = '';
 
-            personeller.forEach((p, index) => {
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Henüz kayıt yok.</td></tr>';
+                return;
+            }
+
+            data.forEach(p => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${p.adSoyad}</td>
-                    <td>${p.tcNo}</td>
-                    <td>${p.departman}</td>
+                    <td>${p.ad_soyad || ''}</td>
+                    <td>${p.tc_no || ''}</td>
+                    <td>${p.departman || ''}</td>
                     <td>${p.telefon || '-'}</td>
                     <td>${p.email || '-'}</td>
-                    <td><button class="delete-btn" onclick="sil(${index})">Sil</button></td>
+                    <td>${p.baslangic_tarihi || '-'}</td>
+                    <td><button class="delete-btn" onclick="sil('${p.id}')">Sil</button></td>
                 `;
                 tbody.appendChild(row);
             });
         }
 
-        document.getElementById('personelForm').addEventListener('submit', function(e) {
+        document.getElementById('personelForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const yeniPersonel = {
-                adSoyad: document.getElementById('adSoyad').value,
-                tcNo: document.getElementById('tcNo').value,
+                ad_soyad: document.getElementById('adSoyad').value,
+                tc_no: document.getElementById('tcNo').value,
                 departman: document.getElementById('departman').value,
                 telefon: document.getElementById('telefon').value,
                 email: document.getElementById('email').value,
-                baslangicTarihi: document.getElementById('baslangicTarihi').value,
+                baslangic_tarihi: document.getElementById('baslangicTarihi').value,
                 notlar: document.getElementById('notlar').value
             };
 
-            personeller.push(yeniPersonel);
-            localStorage.setItem('personeller', JSON.stringify(personeller));
+            const { error } = await supabase
+                .from('personel')
+                .insert([yeniPersonel]);
 
-            alert('✅ Personel başarıyla kaydedildi!');
-            this.reset();
-            renderTable();
+            if (error) {
+                alert('Hata: ' + error.message);
+            } else {
+                alert('✅ Personel başarıyla kaydedildi!');
+                this.reset();
+                loadPersoneller();
+            }
         });
 
-        window.sil = function(index) {
+        window.sil = async function(id) {
             if (confirm('Bu personeli silmek istediğinizden emin misiniz?')) {
-                personeller.splice(index, 1);
-                localStorage.setItem('personeller', JSON.stringify(personeller));
-                renderTable();
+                const { error } = await supabase
+                    .from('personel')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) {
+                    alert('Silme hatası: ' + error.message);
+                } else {
+                    loadPersoneller();
+                }
             }
         };
 
-        // İlk yükleme
-        renderTable();
+        // Sayfa yüklendiğinde verileri getir
+        window.onload = loadPersoneller;
     </script>
 </body>
 </html>
