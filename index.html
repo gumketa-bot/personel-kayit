@@ -6,29 +6,89 @@
     <title>Personel Kayıt Sistemi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
-        form { display: grid; gap: 15px; }
-        label { font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #218838; }
-        .delete-btn { background: #dc3545; }
-        .delete-btn:hover { background: #c82333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background: #f8f9fa; }
+        body { 
+            font-family: Arial, Helvetica, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f0f2f5; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 25px rgba(0,0,0,0.1); 
+        }
+        h1 { text-align: center; color: #1e40af; margin-bottom: 25px; }
+        form { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 16px; 
+            margin-bottom: 30px; 
+        }
+        label { font-weight: bold; display: block; margin-bottom: 6px; color: #374151; }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 11px; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            font-size: 16px; 
+        }
+        button { 
+            padding: 14px; 
+            background: #2563eb; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 17px; 
+            grid-column: span 2;
+            font-weight: bold;
+        }
+        button:hover { background: #1d4ed8; }
+        .delete-btn { 
+            background: #ef4444; 
+            padding: 7px 14px; 
+            font-size: 14px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        th, td { 
+            border: 1px solid #e5e7eb; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        th { background: #f8fafc; font-weight: 600; }
+        .status { 
+            padding: 14px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            text-align: center; 
+            font-weight: bold; 
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>👤 Personel Kayıt Sistemi (Bulut - Supabase)</h1>
+        <h1>👤 Personel Kayıt Sistemi (Bulut)</h1>
         
+        <div id="status" class="status"></div>
+
         <form id="personelForm">
-            <div><label>Ad Soyad:</label><input type="text" id="adSoyad" required></div>
-            <div><label>TC Kimlik No:</label><input type="text" id="tcNo" maxlength="11" required></div>
-            <div><label>Departman:</label>
+            <div>
+                <label>Ad Soyad *</label>
+                <input type="text" id="adSoyad" required>
+            </div>
+            <div>
+                <label>TC Kimlik No *</label>
+                <input type="text" id="tcNo" maxlength="11" required>
+            </div>
+            <div>
+                <label>Departman *</label>
                 <select id="departman" required>
                     <option value="">Seçiniz</option>
                     <option value="Yazılım">Yazılım</option>
@@ -36,13 +96,27 @@
                     <option value="İK">İK</option>
                     <option value="Satış">Satış</option>
                     <option value="Pazarlama">Pazarlama</option>
+                    <option value="Üretim">Üretim</option>
+                    <option value="Lojistik">Lojistik</option>
                     <option value="Diğer">Diğer</option>
                 </select>
             </div>
-            <div><label>Telefon:</label><input type="tel" id="telefon"></div>
-            <div><label>E-posta:</label><input type="email" id="email"></div>
-            <div><label>Başlangıç Tarihi:</label><input type="date" id="baslangicTarihi"></div>
-            <div><label>Notlar:</label><textarea id="notlar" rows="3"></textarea></div>
+            <div>
+                <label>Telefon</label>
+                <input type="tel" id="telefon">
+            </div>
+            <div>
+                <label>E-posta</label>
+                <input type="email" id="email">
+            </div>
+            <div>
+                <label>Başlangıç Tarihi</label>
+                <input type="date" id="baslangicTarihi">
+            </div>
+            <div>
+                <label>Notlar</label>
+                <textarea id="notlar" rows="3"></textarea>
+            </div>
             <button type="submit">✅ Personel Kaydet</button>
         </form>
 
@@ -64,15 +138,23 @@
     </div>
 
     <script>
-        // === SUPABASE AYARLARINI BURAYA YAPIŞTIR ===
+        // ================== SUPABASE AYARLARINI BURAYA YAPIŞTIR ==================
         const SUPABASE_URL = 'https://BURAYA-PROJE-URL-IN.supabase.co';
         const SUPABASE_ANON_KEY = 'BURAYA-ANON-PUBLIC-KEY-IN-YAPISTIR';
 
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        function showStatus(msg, type = "info") {
+            const status = document.getElementById('status');
+            status.textContent = msg;
+            if (type === "success") status.style.background = "#d1fae5";
+            else if (type === "error") status.style.background = "#fee2e2";
+            else status.style.background = "#f3f4f6";
+        }
+
         async function loadPersoneller() {
-            const tbody = document.querySelector('#personelTable tbody');
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Yükleniyor...</td></tr>';
+            const tbody = document.querySelector("#personelTable tbody");
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Yükleniyor...</td></tr>';
 
             const { data, error } = await supabase
                 .from('personel')
@@ -81,62 +163,73 @@
 
             if (error) {
                 console.error(error);
-                tbody.innerHTML = '<tr><td colspan="7" style="color:red;">Hata: Supabase ayarlarını kontrol edin.</td></tr>';
+                showStatus("Hata: " + error.message, "error");
+                tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Bağlantı hatası.<br>Supabase ayarlarınızı kontrol edin.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = '';
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Henüz kayıt yok.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">Henüz kayıt bulunmuyor.</td></tr>';
                 return;
             }
 
-            data.forEach(p => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${p.ad_soyad || ''}</td>
-                    <td>${p.tc_no || ''}</td>
-                    <td>${p.departman || ''}</td>
-                    <td>${p.telefon || '-'}</td>
-                    <td>${p.email || '-'}</td>
-                    <td>${p.baslangic_tarihi || '-'}</td>
-                    <td><button class="delete-btn" onclick="sil('${p.id}')">Sil</button></td>
+            data.forEach(person => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${person.ad_soyad || ''}</td>
+                    <td>${person.tc_no || ''}</td>
+                    <td>${person.departman || ''}</td>
+                    <td>${person.telefon || '-'}</td>
+                    <td>${person.email || '-'}</td>
+                    <td>${person.baslangic_tarihi || '-'}</td>
+                    <td><button class="delete-btn" onclick="sil('${person.id}')">Sil</button></td>
                 `;
-                tbody.appendChild(row);
+                tbody.appendChild(tr);
             });
         }
 
         document.getElementById('personelForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const yeniPersonel = {
-                ad_soyad: document.getElementById('adSoyad').value,
-                tc_no: document.getElementById('tcNo').value,
+            showStatus("Kaydediliyor...");
+
+            const personel = {
+                ad_soyad: document.getElementById('adSoyad').value.trim(),
+                tc_no: document.getElementById('tcNo').value.trim(),
                 departman: document.getElementById('departman').value,
-                telefon: document.getElementById('telefon').value,
-                email: document.getElementById('email').value,
+                telefon: document.getElementById('telefon').value.trim(),
+                email: document.getElementById('email').value.trim(),
                 baslangic_tarihi: document.getElementById('baslangicTarihi').value,
-                notlar: document.getElementById('notlar').value
+                notlar: document.getElementById('notlar').value.trim()
             };
 
-            const { error } = await supabase.from('personel').insert([yeniPersonel]);
+            const { error } = await supabase.from('personel').insert([personel]);
+
             if (error) {
-                alert('Hata: ' + error.message);
+                showStatus("Kayıt edilemedi: " + error.message, "error");
             } else {
-                alert('✅ Kayıt başarılı!');
+                showStatus("✅ Kayıt başarılı!", "success");
                 this.reset();
                 loadPersoneller();
             }
         });
 
         window.sil = async function(id) {
-            if (confirm('Bu personeli silmek istediğinizden emin misiniz?')) {
+            if (confirm("Bu personeli silmek istediğinizden emin misiniz?")) {
                 const { error } = await supabase.from('personel').delete().eq('id', id);
-                if (error) alert('Silme hatası: ' + error.message);
+                if (error) showStatus("Silinemedi: " + error.message, "error");
                 else loadPersoneller();
             }
         };
 
-        window.onload = loadPersoneller;
+        // Sayfa yüklendiğinde
+        window.onload = function() {
+            if (SUPABASE_URL.includes("BURAYA") || SUPABASE_ANON_KEY.includes("BURAYA")) {
+                showStatus("⚠️ Lütfen SUPABASE_URL ve SUPABASE_ANON_KEY bilgilerini kodda güncelleyin!", "error");
+            } else {
+                loadPersoneller();
+            }
+        };
     </script>
 </body>
 </html>
