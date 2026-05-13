@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; }
         form { display: grid; gap: 15px; }
         label { font-weight: bold; }
@@ -19,24 +19,16 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background: #f8f9fa; }
-        .loading { opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>👤 Personel Kayıt Sistemi (Bulut)</h1>
+        <h1>👤 Personel Kayıt Sistemi (Bulut - Supabase)</h1>
         
         <form id="personelForm">
-            <div>
-                <label>Ad Soyad:</label>
-                <input type="text" id="adSoyad" required>
-            </div>
-            <div>
-                <label>TC Kimlik No:</label>
-                <input type="text" id="tcNo" maxlength="11" required>
-            </div>
-            <div>
-                <label>Departman:</label>
+            <div><label>Ad Soyad:</label><input type="text" id="adSoyad" required></div>
+            <div><label>TC Kimlik No:</label><input type="text" id="tcNo" maxlength="11" required></div>
+            <div><label>Departman:</label>
                 <select id="departman" required>
                     <option value="">Seçiniz</option>
                     <option value="Yazılım">Yazılım</option>
@@ -47,22 +39,10 @@
                     <option value="Diğer">Diğer</option>
                 </select>
             </div>
-            <div>
-                <label>Telefon:</label>
-                <input type="tel" id="telefon">
-            </div>
-            <div>
-                <label>E-posta:</label>
-                <input type="email" id="email">
-            </div>
-            <div>
-                <label>Başlangıç Tarihi:</label>
-                <input type="date" id="baslangicTarihi">
-            </div>
-            <div>
-                <label>Notlar:</label>
-                <textarea id="notlar" rows="3"></textarea>
-            </div>
+            <div><label>Telefon:</label><input type="tel" id="telefon"></div>
+            <div><label>E-posta:</label><input type="email" id="email"></div>
+            <div><label>Başlangıç Tarihi:</label><input type="date" id="baslangicTarihi"></div>
+            <div><label>Notlar:</label><textarea id="notlar" rows="3"></textarea></div>
             <button type="submit">✅ Personel Kaydet</button>
         </form>
 
@@ -101,12 +81,11 @@
 
             if (error) {
                 console.error(error);
-                tbody.innerHTML = '<tr><td colspan="7" style="color:red;">Veritabanı hatası. Supabase ayarlarını kontrol edin.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="color:red;">Hata: Supabase ayarlarını kontrol edin.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = '';
-
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Henüz kayıt yok.</td></tr>';
                 return;
@@ -129,7 +108,6 @@
 
         document.getElementById('personelForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
             const yeniPersonel = {
                 ad_soyad: document.getElementById('adSoyad').value,
                 tc_no: document.getElementById('tcNo').value,
@@ -140,14 +118,11 @@
                 notlar: document.getElementById('notlar').value
             };
 
-            const { error } = await supabase
-                .from('personel')
-                .insert([yeniPersonel]);
-
+            const { error } = await supabase.from('personel').insert([yeniPersonel]);
             if (error) {
                 alert('Hata: ' + error.message);
             } else {
-                alert('✅ Personel başarıyla kaydedildi!');
+                alert('✅ Kayıt başarılı!');
                 this.reset();
                 loadPersoneller();
             }
@@ -155,20 +130,12 @@
 
         window.sil = async function(id) {
             if (confirm('Bu personeli silmek istediğinizden emin misiniz?')) {
-                const { error } = await supabase
-                    .from('personel')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) {
-                    alert('Silme hatası: ' + error.message);
-                } else {
-                    loadPersoneller();
-                }
+                const { error } = await supabase.from('personel').delete().eq('id', id);
+                if (error) alert('Silme hatası: ' + error.message);
+                else loadPersoneller();
             }
         };
 
-        // Sayfa yüklendiğinde verileri getir
         window.onload = loadPersoneller;
     </script>
 </body>
